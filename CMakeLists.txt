@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.16)
 project(Peabrain CXX)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Generate compile_commands.json so CLion/clangd can index correctly
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(COMPILE_FLAGS --cache ${CMAKE_BINARY_DIR}/cache)
+# set(COMPILE_FLAGS --cache ${CMAKE_BINARY_DIR}/cache)
 set(LINK_FLAGS -sASSERTIONS=0 -sMALLOC=emmalloc -sWASM_ASYNC_COMPILATION=0)
 add_compile_options(${COMPILE_FLAGS})
 add_link_options(${COMPILE_FLAGS} ${LINK_FLAGS})
