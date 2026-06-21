@@ -43,5 +43,5 @@ set(SCREEPS_BRANCH "default" CACHE STRING "Screeps branch to deploy to")
 set(SCREEPS_SCRIPTS_DIR "C:/Users/warre/AppData/Local/Screeps/scripts/127_0_0_1___21025/${SCREEPS_BRANCH}")
 
 # here you could chose to deploy to a local server or to the official screeps world.
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/dist ${SCREEPS_SCRIPTS_DIR})
-#add_custom_command(TARGET ${TARGET_NAME} POST_BUILD COMMAND ${Python_EXECUTABLE} ${screepsxx_SOURCE_DIR}/tools/upload.py ${CMAKE_SOURCE_DIR}/dist $ENV{SCREEPS_TOKEN} ${SCREEPS_BRANCH})
+#add_custom_command(TARGET ${TARGET_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/dist ${SCREEPS_SCRIPTS_DIR})
+add_custom_command(TARGET ${TARGET_NAME} POST_BUILD COMMAND ${Python_EXECUTABLE} ${screepsxx_SOURCE_DIR}/tools/upload.py ${CMAKE_SOURCE_DIR}/dist $ENV{SCREEPS_TOKEN} ${SCREEPS_BRANCH})
