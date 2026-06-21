@@ -12,8 +12,9 @@ extern "C" void loop()
 {
 	Screeps::Context::update();
 
-	JS::console.log(std::string("\n\n\n\n\n\n\n\n\n"));
+	JS::console.log(std::string("\n\n\n"));
 	JS::console.log(std::string("Processing tick:\t") + std::to_string(Screeps::Game.time()));
+
 
 	JS::console.log("Used CPU:\t" + std::to_string(Screeps::Game.cpuGetUsed()));
 	JS::console.log("Bucket:\t" + std::to_string(static_cast<int>(Screeps::Game.cpu()["bucket"])));

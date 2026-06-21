@@ -43,8 +43,8 @@ Screeps server (each tick)
 cd C:\
 git clone https://github.com/emscripten-core/emsdk.git
 cd emsdk
-.\emsdk install latest
-.\emsdk activate latest
+.\emsdk install 2.0.0
+.\emsdk activate 2.0.0
 ```
 
 ## 2. Project structure
