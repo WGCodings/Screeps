@@ -3,7 +3,7 @@
 const wasm_loader = require('wasm_loader')
 
 var mod;
-wasm_loader('app_loader', 'app_module').then((instance) => {
+wasm_loader('Peabrain_loader', 'Peabrain_module').then((instance) => {
     console.log("WASM module loaded.");
     mod = instance;
 });
