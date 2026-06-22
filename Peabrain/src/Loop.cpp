@@ -1,6 +1,5 @@
 #include <Screeps/Context.hpp>
 #include <Screeps/Creep.hpp>
-#include <Screeps/StructureSpawn.hpp>
 
 #include <emscripten.h>
 #include <emscripten/bind.h>
@@ -14,7 +13,7 @@ extern "C" void loop()
 {
 	Screeps::Context::update();
 
-	JS::console.log(std::string("\n\n\n"));
+
 	JS::console.log(std::string("Processing tick:\t") + std::to_string(Screeps::Game.time()));
 
 	{
@@ -22,6 +21,7 @@ extern "C" void loop()
 	}
 
 	JS::console.log("Used CPU:\t" + std::to_string(Screeps::Game.cpuGetUsed()));
+	JS::console.log(std::string("\n"));
 }
 
 EMSCRIPTEN_BINDINGS(loop)

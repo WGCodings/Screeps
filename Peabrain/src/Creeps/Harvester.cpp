@@ -53,24 +53,7 @@ void Harvester::run()
 }
 
 
-/// Find source and go harvest b*tch
-void Harvester::harvest()
-{
-	JSON memory = creep.memory();
 
-	if (!memory.contains("sourceId"))
-	{
-		findSource(memory);
-		if (!memory.contains("sourceId")) return;
-	}
-
-	Screeps::Source* source = getSourceById(memory["sourceId"]);
-
-	if (!source) { memory.erase("sourceId"); creep.setMemory(memory); return; }
-
-	if (creep.harvest(*source) == Screeps::ERR_NOT_IN_RANGE)
-		creep.moveTo(*source);
-}
 
 /// Deliver your energy to the source b*tch
 /// If all sources are full, go upgrading the controller
@@ -79,6 +62,7 @@ void Harvester::deliver()
 
 	JSON memory = creep.memory();
 
+	// TODO Currently only delivers to spawn but should also deliver to extensions later.
 	std::map<std::string, Screeps::StructureSpawn> spawns = Screeps::Game.spawns();
 
 	if (spawns.empty())

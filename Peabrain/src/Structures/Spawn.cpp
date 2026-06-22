@@ -8,6 +8,10 @@ namespace Peabrain {
 
     void Spawn::run()
     {
+        // Only run every 10 ticks
+        if (Screeps::Game.time() % checkSpawnInterval != 0)
+            return;
+
         if (spawn.room().find(Screeps::FIND_CREEPS).size() < 20)
             {
             spawnHarvester();
@@ -32,6 +36,8 @@ namespace Peabrain {
 
             JSON options;
             options["memory"] = initialMemory;
+
+            JS::console.log(std::string("Calling spawnCreep."));
 
             spawn.spawnCreep(body, name, options);
 

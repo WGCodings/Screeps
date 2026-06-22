@@ -12,8 +12,6 @@ namespace Peabrain {
 
         void run() override;
 
-    private:
-        void harvest();
     };
 
 }

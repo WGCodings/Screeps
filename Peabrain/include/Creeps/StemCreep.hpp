@@ -24,7 +24,17 @@ namespace Peabrain {
 
         virtual void upgrade();
 
-        void findSource(JSON& memory);
+        virtual void harvest();
+
+        virtual void gather();
+
+        virtual void withdraw();
+
+        void setSourceId();
+
+        void setGatherId();
+
+        void setWithdrawId();
 
         static Screeps::Source* getSourceById(const std::string& sourceId);
     };

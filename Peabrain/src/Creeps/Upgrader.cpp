@@ -33,22 +33,4 @@ namespace Peabrain {
         else
             upgrade();
     }
-
-    void Upgrader::harvest()
-    {
-        JSON memory = creep.memory();
-
-        if (!memory.contains("sourceId"))
-        {
-            findSource(memory);
-            if (!memory.contains("sourceId")) return;
-        }
-
-        Screeps::Source* source = getSourceById(memory["sourceId"]);
-
-        if (!source) { memory.erase("sourceId"); creep.setMemory(memory); return; }
-
-        if (creep.harvest(*source) == Screeps::ERR_NOT_IN_RANGE)
-            creep.moveTo(*source);
-    }
 }

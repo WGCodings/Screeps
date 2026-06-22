@@ -13,8 +13,11 @@ namespace Peabrain {
         void run();
 
     private:
+        static constexpr int checkSpawnInterval = 10;
+
         void spawnHarvester();
         void spawnUpgrader();
+        void spawnBuilder();
 
         Screeps::StructureSpawn spawn;
     };
