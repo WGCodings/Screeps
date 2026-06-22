@@ -15,6 +15,10 @@ namespace Peabrain {
         void harvest();
         void deliver();
 
+        void findSource(JSON& memory);
+
+        static Screeps::Source* getSourceById(const std::string& sourceId);
+
         Screeps::Creep creep;
     };
 
