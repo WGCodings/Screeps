@@ -1,4 +1,4 @@
-# Screeps
+# Screeps - Peabrain
 Code for the MMO-programming game Screeps. This project will be my first contact with c++, scary stuff.
 I hope to learn the language during this project and progressively improve.
 The JavaScript wrapper that I will be using is from the screepsxx project, which I will and try to expand as well.

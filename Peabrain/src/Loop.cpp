@@ -6,6 +6,8 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
+#include "Brain.hpp"
+
 
 EMSCRIPTEN_KEEPALIVE
 extern "C" void loop()
@@ -15,6 +17,9 @@ extern "C" void loop()
 	JS::console.log(std::string("\n\n\n"));
 	JS::console.log(std::string("Processing tick:\t") + std::to_string(Screeps::Game.time()));
 
+	{
+		Peabrain::Brain::run();
+	}
 
 	JS::console.log("Used CPU:\t" + std::to_string(Screeps::Game.cpuGetUsed()));
 	JS::console.log("Bucket:\t" + std::to_string(static_cast<int>(Screeps::Game.cpu()["bucket"])));
