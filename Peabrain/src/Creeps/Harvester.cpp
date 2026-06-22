@@ -1,10 +1,11 @@
 #include "Creeps/Harvester.hpp"
 
-#include <random>
+
 #include <Screeps/Game.hpp>
 #include <Screeps/Source.hpp>
 #include <Screeps/StructureSpawn.hpp>
 
+#include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
 #include "Screeps/Store.hpp"
 #include "Screeps/Room.hpp"
@@ -29,6 +30,11 @@ void Harvester::run()
 		task = "harvesting";
 		creep.say("Harvest.");
 	}
+	else if (task == "upgrading" && creep.store().getUsedCapacity(Screeps::RESOURCE_ENERGY) == 0)
+	{
+		task = "harvesting";
+		creep.say("Harvest.");
+	}
 
 	memory["task"] = task;
 	creep.setMemory(memory);
@@ -37,11 +43,16 @@ void Harvester::run()
 	{
 		harvest();
 	}
-	else
+	else if (task == "delivering")
 	{
 		deliver();
 	}
+	else {
+		upgrade();
+	}
 }
+
+
 /// Find source and go harvest b*tch
 void Harvester::harvest()
 {
@@ -54,7 +65,7 @@ void Harvester::harvest()
 	}
 
 	Screeps::Source* source = getSourceById(memory["sourceId"]);
-	
+
 	if (!source) { memory.erase("sourceId"); creep.setMemory(memory); return; }
 
 	if (creep.harvest(*source) == Screeps::ERR_NOT_IN_RANGE)
@@ -62,8 +73,12 @@ void Harvester::harvest()
 }
 
 /// Deliver your energy to the source b*tch
+/// If all sources are full, go upgrading the controller
 void Harvester::deliver()
 {
+
+	JSON memory = creep.memory();
+
 	std::map<std::string, Screeps::StructureSpawn> spawns = Screeps::Game.spawns();
 
 	if (spawns.empty())
@@ -73,40 +88,21 @@ void Harvester::deliver()
 
 	Screeps::StructureSpawn& target = spawns.begin()->second;
 
+
+	// If there is no place to store the energy, go upgrade the controller
+	int freeCapacity = target.store().getFreeCapacity(Screeps::RESOURCE_ENERGY).value();
+
+	if (freeCapacity == 0)
+	{
+		memory["task"] = "upgrading";
+		creep.setMemory(memory);
+		upgrade();
+		return;
+	}
+
 	if (creep.transfer(target, Screeps::RESOURCE_ENERGY) == Screeps::ERR_NOT_IN_RANGE)
 	{
 		creep.moveTo(target);
 	}
 }
-
-/// This function finds a source and assign the id to the memory of the harvester
-void Harvester::findSource(JSON& memory)
-{
-	auto sources = creep.room().find(Screeps::FIND_SOURCES_ACTIVE);
-	if (sources.empty()) return;
-
-	std::vector<int> indices(sources.size());
-	std::iota(indices.begin(), indices.end(), 0);
-	std::shuffle(indices.begin(), indices.end(), std::default_random_engine(Screeps::Game.time()));
-
-	for (int i : indices)
-	{
-		auto* source = dynamic_cast<Screeps::Source*>(sources[i].get());
-		if (source && source->energy() > 0)
-		{
-			memory["sourceId"] = source->id();
-			creep.setMemory(memory);
-			return;
-		}
-	}
-}
-
-/// This function return the source object given an id
-Screeps::Source* Harvester::getSourceById(const std::string& sourceId)
-{
-	auto object = Screeps::Game.getObjectById(sourceId);
-	if (!object) return nullptr;
-	return dynamic_cast<Screeps::Source*>(object.release());
-}
-
 }

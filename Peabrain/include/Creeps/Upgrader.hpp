@@ -1,11 +1,11 @@
-#ifndef PEABRAIN_CREEPS_HARVESTER_HPP
-#define PEABRAIN_CREEPS_HARVESTER_HPP
+#ifndef PEABRAIN_CREEPS_UPGRADER_HPP
+#define PEABRAIN_CREEPS_UPGRADER_HPP
 
 #include "Creeps/StemCreep.hpp"
 
 namespace Peabrain {
 
-    class Harvester : public StemCreep
+    class Upgrader : public StemCreep
     {
     public:
         using StemCreep::StemCreep;
@@ -14,7 +14,6 @@ namespace Peabrain {
 
     private:
         void harvest();
-        void deliver();
     };
 
 }

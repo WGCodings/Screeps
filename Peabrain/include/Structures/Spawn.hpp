@@ -14,6 +14,7 @@ namespace Peabrain {
 
     private:
         void spawnHarvester();
+        void spawnUpgrader();
 
         Screeps::StructureSpawn spawn;
     };

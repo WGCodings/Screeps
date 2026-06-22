@@ -6,7 +6,9 @@
 #include <Screeps/Context.hpp>
 #include <Screeps/Game.hpp>
 
+#include "MemoryFlayer.hpp"
 #include "Creeps/Harvester.hpp"
+#include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
 #include "Screeps/Creep.hpp"
 
@@ -15,16 +17,12 @@ namespace Peabrain {
 
     void Brain::run()
     {
-        Screeps::Context::update();
-
         runStructures();
         runCreeps();
-
+        MemoryFlayer::run();
     }
 
     void Brain::runStructures() {
-
-
 
         auto spawns = Screeps::Game.spawns();
 
@@ -44,16 +42,25 @@ namespace Peabrain {
             // If memory does not contain role, skip. Better to kill or fix role.
             if (!memory.contains("role"))
             {
+                memory["role"] = "harvester";
+                creep.setMemory(memory);
                 continue;
             }
 
             auto role = memory["role"].get<std::string>();
+
+            // Start looping over all the roles
 
             if (role == "harvester")
              {
                 Harvester harvester(creep);
                 harvester.run();
              }
+            if (role == "upgrader")
+            {
+                Upgrader upgrader(creep);
+                upgrader.run();
+            }
         }
     }
 

@@ -22,7 +22,6 @@ extern "C" void loop()
 	}
 
 	JS::console.log("Used CPU:\t" + std::to_string(Screeps::Game.cpuGetUsed()));
-	JS::console.log("Bucket:\t" + std::to_string(static_cast<int>(Screeps::Game.cpu()["bucket"])));
 }
 
 EMSCRIPTEN_BINDINGS(loop)

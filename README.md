@@ -60,7 +60,7 @@ Final structure:
 ```
 Screeps/
 ├── CMakeLists.txt
-├── loop.cpp              <- bot logic, called once per tick
+├── Peabrain               <- actual code of the Peabrain
 ├── js/
 │   ├── main.js            <- Screeps entry point, loads the wasm module
 │   └── wasm_loader.js     <- generic Emscripten module loader glue
