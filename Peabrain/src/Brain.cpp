@@ -5,12 +5,15 @@
 
 #include <Screeps/Context.hpp>
 #include <Screeps/Game.hpp>
+#include "Screeps/Room.hpp"
 
 #include "MemoryFlayer.hpp"
 #include "Creeps/Harvester.hpp"
 #include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
+#include "Room/Colony.hpp"
 #include "Screeps/Creep.hpp"
+#include "Screeps/StructureController.hpp"
 
 
 namespace Peabrain {
@@ -19,18 +22,28 @@ namespace Peabrain {
     {
         runStructures();
         runCreeps();
+        runRooms();
         MemoryFlayer::run();
     }
 
     void Brain::runStructures() {
-
-        auto spawns = Screeps::Game.spawns();
 
         for (auto& [name, spawn] : Screeps::Game.spawns())
             {
             Spawn spawner(spawn);
             spawner.run();
             }
+    }
+
+    void Brain::runRooms() {
+
+        for (auto& [name, room] : Screeps::Game.rooms())
+        {
+            if (room.controller().value().my()) {
+                Colony colony(room);
+                colony.plan();
+            }
+        }
     }
 
     void Brain::runCreeps()

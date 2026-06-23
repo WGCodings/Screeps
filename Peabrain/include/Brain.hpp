@@ -11,6 +11,7 @@ namespace Peabrain {
     private:
         static void runStructures();
         static void runCreeps();
+        static void runRooms();
     };
 
 }

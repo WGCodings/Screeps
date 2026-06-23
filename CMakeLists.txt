@@ -20,7 +20,7 @@ set(TARGET_NAME Peabrain)
 
 include_directories(${CMAKE_SOURCE_DIR}/Peabrain/include)
 
-file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/Peabrain/src/*.cpp ${CMAKE_SOURCE_DIR}/Peabrain/src/*/*.cpp)
+file(GLOB_RECURSE SRC_FILES ${CMAKE_SOURCE_DIR}/Peabrain/src/*.cpp)
 
 add_executable(${TARGET_NAME} ${SRC_FILES})
 target_link_libraries(${TARGET_NAME} screepsxx)
