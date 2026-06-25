@@ -118,3 +118,7 @@ Requires:
   [System.Environment]::SetEnvironmentVariable('SCREEPS_TOKEN', 'your-token', 'User')
   ```
 - The target branch must already exist in the Screeps account (create via the in-game Code IDE) before pushing to it.
+
+## 5. Features
+
+### Automatic room planning 

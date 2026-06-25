@@ -13,7 +13,7 @@ namespace Peabrain {
 
     private:
 
-
+        void planSpawns();
         void planContainers();
         void planLinks();
         void planStorage();
@@ -24,7 +24,7 @@ namespace Peabrain {
 
         static bool hasEntryOnCoords(const JSON &memory, int x, int y);
 
-        static void addEntryOnCoords(JSON &memory,  int x, int y, const std::string &sType, int cLevel);
+        static bool addEntryOnCoords(JSON &memory,  int x, int y, const std::string &sType, int cLevel);
 
         Screeps::Room room;
     };

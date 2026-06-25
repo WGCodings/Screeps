@@ -21,6 +21,7 @@ namespace Peabrain {
     /// Then later we can build on every spot based on the controller level of our room.
     void Colony::plan() {
 
+        planSpawns();
         planContainers();
         planLinks();
         planStorage();
@@ -29,6 +30,32 @@ namespace Peabrain {
         planRoads();
 
     }
+
+    void Colony::planSpawns() {
+        JSON memory = room.memory();
+
+        if (memory["spawnsPlanned"] == true) {
+            return;
+        }
+        JS::console.log(std::string("Planning the spawns."));
+
+        // Initialize blueprint
+        if (!memory.contains("blueprint"))
+            memory["blueprint"] = JSON::object();
+
+        auto spawns = room.find(Screeps::FIND_MY_SPAWNS);
+        auto* spawn = dynamic_cast<Screeps::Structure*>(spawns.front().get());
+
+        int x = spawn->pos().x();
+        int y = spawn->pos().y();
+
+        addEntryOnCoords(memory, x,y,Screeps::STRUCTURE_SPAWN,1);
+
+        memory["spawnsPlanned"] = true;
+        room.setMemory(memory);
+
+    }
+
     /// This plans the containers and puts them in memory
     /// Places containers around energy sources
     void Colony::planContainers() {
@@ -40,10 +67,6 @@ namespace Peabrain {
         }
 
         JS::console.log(std::string("Planning the containers."));
-
-        // Initialize blueprint
-        if (!memory.contains("blueprint"))
-            memory["blueprint"] = JSON::object();
 
         auto sources = room.find(Screeps::FIND_SOURCES_ACTIVE);
 
@@ -348,6 +371,46 @@ namespace Peabrain {
 
         JS::console.log(std::string("Planning the Roads."));
 
+        // This part makes road between sources and the storage and controller and storage
+        for (auto& [name, entry] : memory["blueprint"].items())
+        {
+            // Look for storage
+            if (entry.value("sType", "") == Screeps::STRUCTURE_STORAGE) {
+                int storage_x = entry["x"].get<int>();
+                int storage_y = entry["y"].get<int>();
+
+                auto storage_pos = Screeps::RoomPosition(room.name(), storage_x, storage_y);
+
+                auto sources = room.find(Screeps::FIND_SOURCES);
+
+                JSON pathOptions;
+                pathOptions["ignoreCreeps"] = true;
+
+                for (auto &source : sources) {
+
+                    auto path = room.findPath(source->pos(),storage_pos, pathOptions);
+
+                    // Loop over steps in path and place road everywhere where possible
+                    for (auto& step : path) {
+                        bool result = addEntryOnCoords(memory, step.x, step.y, Screeps::STRUCTURE_ROAD,  2);
+                        if (result) {
+                            JS::console.log(std::string("Placing road along source path on x = " + std::to_string(step.x) + " y = " + std::to_string(step.y)));
+                            room.setMemory(memory);
+                        }
+                    }
+                }
+
+                // Finally make a path from the controller to the storage
+                auto path = room.findPath(room.controller()->pos(), storage_pos, pathOptions);
+                for (auto& step : path) {
+                    bool result = addEntryOnCoords(memory, step.x, step.y, Screeps::STRUCTURE_ROAD, 2);
+                    if (result) {
+                        JS::console.log(std::string("Placing road along controller path on x = " + std::to_string(step.x) + " y = " + std::to_string(step.y)));
+                        room.setMemory(memory);
+                    }
+                }
+            }
+        }
 
         // This part loops over all memory entries and puts raods there. Im a bit sloppy with setting cLevel here.
         // It is just the same as the one from entry. Not ideal but it works I hope?
@@ -371,51 +434,15 @@ namespace Peabrain {
                 if (!hasEntryOnCoords(memory, x, y)) {
                     if (room.getTerrain().get(x, y) != Screeps::TERRAIN_MASK_WALL)
                     {
-                        addEntryOnCoords(memory,x,y,Screeps::STRUCTURE_ROAD, cLevel);
+                        bool result = addEntryOnCoords(memory,x,y,Screeps::STRUCTURE_ROAD, cLevel);
 
-                        JS::console.log(std::string("Placing road around on x = " + std::to_string(x) + " y = " + std::to_string(y)));
-
-                        // TODO check if you can make this setMemory on a mutable memory?
-                        room.setMemory(memory);
-                        memory = room.memory();
+                        if (result) {
+                            JS::console.log(std::string("Placing road around on x = " + std::to_string(x) + " y = " + std::to_string(y)));
+                            // TODO check if you can make this setMemory on a mutable memory?
+                            room.setMemory(memory);
+                            memory = room.memory();
+                        }
                     }
-                }
-            }
-        }
-
-        // This part makes road between sources and the storage and controller and storage
-        for (auto& [name, entry] : memory["blueprint"].items())
-        {
-            // Look for storage
-            if (entry.value("sType", "") == Screeps::STRUCTURE_STORAGE) {
-                int storage_x = entry["x"].get<int>();
-                int storage_y = entry["y"].get<int>();
-
-                auto storage_pos = Screeps::RoomPosition(room.name(), storage_x, storage_y);
-
-                auto sources = room.find(Screeps::FIND_SOURCES);
-
-                JSON pathOptions;
-                pathOptions["ignoreCreeps"] = true;
-
-                for (auto &source : sources) {
-
-                    auto path = room.findPath(source->pos(),storage_pos, pathOptions);
-
-                    // Loop over steps in path and place road everywhere where possible
-                    for (auto& step : path) {
-                        addEntryOnCoords(memory, step.x, step.y, Screeps::STRUCTURE_ROAD,  2);
-                        JS::console.log(std::string("Placing road along source path on x = " + std::to_string(step.x) + " y = " + std::to_string(step.y)));
-                        room.setMemory(memory);
-                    }
-                }
-
-                // Finally make a path from the controller to the storage
-                auto path = room.findPath(room.controller()->pos(), storage_pos, pathOptions);
-                for (auto& step : path) {
-                    addEntryOnCoords(memory, step.x, step.y, Screeps::STRUCTURE_ROAD, 2);
-                    JS::console.log(std::string("Placing road along controller path on x = " + std::to_string(step.x) + " y = " + std::to_string(step.y)));
-                    room.setMemory(memory);
                 }
             }
         }
@@ -439,9 +466,11 @@ namespace Peabrain {
 
     /// Helper functon to add an entry in memory on the given coordinates, structure type and clevel
     /// It used hasEntryOnCoords() to filter out entries that are already in memory.
-    void Colony::addEntryOnCoords(JSON& memory, int x, int y, const std::string& sType, int cLevel)
+    bool Colony::addEntryOnCoords(JSON& memory, int x, int y, const std::string& sType, int cLevel)
     {
-        if (hasEntryOnCoords(memory, x, y)) return; // skip if spot already taken
+        if (hasEntryOnCoords(memory, x, y)) {
+            return false;
+        } // skip if spot already taken
 
         std::string key = sType + "_" + std::to_string(x) + "_" + std::to_string(y);
         memory["blueprint"][key] = {
@@ -451,6 +480,7 @@ namespace Peabrain {
             {"cLevel", cLevel},
             {"status", "planned"},
         };
+        return true;
     }
 
 
