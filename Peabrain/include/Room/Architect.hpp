@@ -4,12 +4,14 @@
 
 namespace Peabrain {
 
-    class Colony
+    class Architect
     {
     public:
-        explicit Colony(Screeps::Room room) : room(std::move(room)) {}
+        explicit Architect(Screeps::Room room) : room(std::move(room)) {}
 
         void plan();
+        void reviewStructures();
+        void buildStructures();
 
     private:
 
@@ -20,7 +22,6 @@ namespace Peabrain {
         void planTowers();
         void planExtensions();
         void planRoads();
-
 
         static bool hasEntryOnCoords(const JSON &memory, int x, int y);
 

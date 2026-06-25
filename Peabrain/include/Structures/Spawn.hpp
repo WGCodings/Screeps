@@ -21,7 +21,5 @@ namespace Peabrain {
 
         Screeps::StructureSpawn spawn;
     };
-
 }
-
 #endif

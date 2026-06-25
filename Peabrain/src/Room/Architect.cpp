@@ -1,5 +1,5 @@
 
-#include "Room/Colony.hpp"
+#include "Room/Architect.hpp"
 
 #include "Screeps/Game.hpp"
 #include "Screeps/Room.hpp"
@@ -19,8 +19,7 @@ namespace Peabrain {
     /// ]
     /// }
     /// Then later we can build on every spot based on the controller level of our room.
-    void Colony::plan() {
-
+    void Architect::plan() {
         planSpawns();
         planContainers();
         planLinks();
@@ -28,10 +27,66 @@ namespace Peabrain {
         planTowers();
         planExtensions();
         planRoads();
+        // TODO planWallsAndRamparts();
+        // TODO planExtractor();
+        // TODO planLabs();
+        // TODO planTerminal();
+        // TODO planFactory();
+        // TODO planObserver() planPowerSpawn() planNuker()
+        }
+
+    /// This function iterates over all the structures in memory.
+    /// It first checks if there is a structure present on the x,y.
+    /// If present, then it checks hits/hitsmax, if lower than 0.5 then set status to 'repair', else 'built'.
+    /// If there is not structure, check if there is an construction site. If not, it was destroyed, so set status to 'planned'.
+    void Architect::reviewStructures() {
+
+        if (Screeps::Game.time() % 25 != 0)
+            return;
+
+        JS::console.log(std::string("Architect is reviewing the room structure plan."));
+
+        JSON memory = room.memory();
+
+        for (auto& [key, entry] : memory["blueprint"].items()) {
+            int x = entry["x"].get<int>();
+            int y = entry["y"].get<int>();
+            auto structures = room.lookForAt(Screeps::LOOK_STRUCTURES,x,y);
+            // If there is a structure, check hits.
+            // If damages set status to repair, else set status to built.
+            if (!structures.empty()) {
+                auto* structure = dynamic_cast<Screeps::Structure*>(structures.front().get());
+                if (structure->hits() < 0.5*structure->hitsMax()) {
+                    entry["status"] = "repair";
+                    JS::console.log(std::string(key) + "needs repair.");
+                }
+                else {
+                    entry["status"] = "built";
+                }
+            }
+            // If there is not a structure on this spot, check if there is a construction site
+            // If there is no construction site, this means it got destroyed so set the status to planned
+            else {
+                auto constructionSites = room.lookForAt(Screeps::LOOK_CONSTRUCTION_SITES,x,y);
+                if (constructionSites.empty()) {
+                    entry["status"] = "planned";
+                    JS::console.log(std::string(key) + "was destroyed and should be replanned.");
+                }
+                else {
+                    entry["status"] = "construction";
+                }
+            }
+            memory["blueprint"][key] = entry;
+        }
+        room.setMemory(memory);
+        JS::console.log(std::string("Architect is done reviewing the room structure plan."));
+    }
+
+    void Architect::buildStructures() {
 
     }
 
-    void Colony::planSpawns() {
+    void Architect::planSpawns() {
         JSON memory = room.memory();
 
         if (memory["spawnsPlanned"] == true) {
@@ -58,7 +113,7 @@ namespace Peabrain {
 
     /// This plans the containers and puts them in memory
     /// Places containers around energy sources
-    void Colony::planContainers() {
+    void Architect::planContainers() {
 
         JSON memory = room.memory();
 
@@ -110,7 +165,7 @@ namespace Peabrain {
     /// Look for spot near spawn for easy acces
     /// Looks for another two spots adjacent to already planned containers
     /// TODO Functions should be simplified by helper functions, lots of double code
-    void Colony::planLinks()
+    void Architect::planLinks()
     {
         JSON memory = room.memory();
 
@@ -209,7 +264,7 @@ namespace Peabrain {
 
     /// Plans the storage
     /// Must be 2 left,right,under or above the central link
-    void Colony::planStorage(){
+    void Architect::planStorage(){
         JSON memory = room.memory();
 
         if (memory["storagePlanned"] == true) {
@@ -247,7 +302,7 @@ namespace Peabrain {
     }
 
     /// Plans the towers in checkerboard formation around spawn.
-    void Colony::planTowers() {
+    void Architect::planTowers() {
 
 
         JSON memory = room.memory();
@@ -303,7 +358,7 @@ namespace Peabrain {
 
     /// Plans the extensions in checkerboard formation around spawn.
     /// Copy paste from planTowers, should be simplified in common helper function
-    void Colony::planExtensions() {
+    void Architect::planExtensions() {
 
         JSON memory = room.memory();
 
@@ -361,7 +416,7 @@ namespace Peabrain {
     /// In this simple version I will just place roads around every structure that is in memory
     /// Then I will add the path from sources to the storage as well
     /// Also the path from the storage to the controller I will add to the network.
-    void Colony::planRoads() {
+    void Architect::planRoads() {
 
         JSON memory = room.memory();
 
@@ -453,7 +508,7 @@ namespace Peabrain {
     }
 
     /// Just a helper function to find if tehre already exists an entry on given coordinates
-    bool Colony::hasEntryOnCoords(const JSON& memory, int x, int y) {
+    bool Architect::hasEntryOnCoords(const JSON& memory, int x, int y) {
 
         for (auto& [key, entry] : memory["blueprint"].items())
         {
@@ -466,7 +521,7 @@ namespace Peabrain {
 
     /// Helper functon to add an entry in memory on the given coordinates, structure type and clevel
     /// It used hasEntryOnCoords() to filter out entries that are already in memory.
-    bool Colony::addEntryOnCoords(JSON& memory, int x, int y, const std::string& sType, int cLevel)
+    bool Architect::addEntryOnCoords(JSON& memory, int x, int y, const std::string& sType, int cLevel)
     {
         if (hasEntryOnCoords(memory, x, y)) {
             return false;

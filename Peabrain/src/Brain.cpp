@@ -11,7 +11,7 @@
 #include "Creeps/Harvester.hpp"
 #include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
-#include "Room/Colony.hpp"
+#include "Room/Architect.hpp"
 #include "Screeps/Creep.hpp"
 #include "Screeps/StructureController.hpp"
 
@@ -40,8 +40,9 @@ namespace Peabrain {
         for (auto& [name, room] : Screeps::Game.rooms())
         {
             if (room.controller().value().my()) {
-                Colony colony(room);
-                colony.plan();
+                Architect architect(room);
+                architect.plan();
+                architect.reviewStructures();
             }
         }
     }
