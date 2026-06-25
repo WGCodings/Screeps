@@ -16,6 +16,13 @@ namespace Peabrain {
 
         void planContainers();
         void planLinks();
+        void planStorage();
+        void planTowers();
+        void planExtensions();
+        void planRoads();
+
+
+        static bool hasEntryOnCoords(const JSON &memory, int x, int y);
 
         Screeps::Room room;
     };

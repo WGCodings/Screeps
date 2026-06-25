@@ -13,8 +13,8 @@ namespace Peabrain {
     /// It will be build up like
     /// {
     /// [
-    /// {x1,y1,controllerLevel1,structType1},
-    /// {x2,y2,controllerLevel2,structType2},
+    /// {x1,y1,controllerLevel1,structType1,status},
+    /// {x2,y2,controllerLevel2,structType2,status},
     /// ...
     /// ]
     /// }
@@ -31,8 +31,12 @@ namespace Peabrain {
 
         planContainers();
         planLinks();
+        planStorage();
+        planTowers();
+        planExtensions();
 
         // Set planned to true in memory such that this only runs once per room.
+        // TODO add planned variable for each kind of structure, easier to add them one by one
         memory = room.memory();
         memory["planned"] = true;
         room.setMemory(memory);
@@ -88,7 +92,7 @@ namespace Peabrain {
             entry["x"] = best_x;
             entry["y"] = best_y;
             entry["sType"]  = Screeps::STRUCTURE_CONTAINER;
-            entry["cLevel"] = room.controller()->level();
+            entry["cLevel"] = 1;
             entry["status"] = "planned";
 
             memory["blueprint"][key] = entry;
@@ -132,6 +136,7 @@ namespace Peabrain {
                 entry["sType"]  = Screeps::STRUCTURE_LINK;
                 entry["cLevel"] = 6;
                 entry["status"] = "planned";
+                entry["role"]   = "central";
 
                 memory["blueprint"][key] = entry;
                 break;
@@ -184,10 +189,260 @@ namespace Peabrain {
             entry2["sType"]  = Screeps::STRUCTURE_LINK;
             entry2["cLevel"] = 6;
             entry2["status"] = "planned";
+            entry["role"]    = "source";
 
             memory["blueprint"][key] = entry2;
         }
 
         room.setMemory(memory);
+    }
+
+    /// Plans the storage
+    /// Must be 2 left,right,under or above the central link
+    void Colony::planStorage(){
+        JSON memory = room.memory();
+
+        JS::console.log(std::string("Planning the storage."));
+
+        for (auto& [name, entry] : memory["blueprint"].items())
+        {
+            // Look for link with role 'central'
+            if (entry.value("sType", "") == Screeps::STRUCTURE_LINK && entry.value("role", "") == "central") {
+                int link_x = entry["x"].get<int>();
+                int link_y = entry["y"].get<int>();
+
+                const std::vector<std::pair<int,int>> directions = {{0,-2},{2,0},{0,2},{-2,0}};
+
+                for (auto& [dx, dy] : directions)
+                {
+                    int x = link_x + dx;
+                    int y = link_y + dy;
+
+                    if ((room.getTerrain().get(x, y) != Screeps::TERRAIN_MASK_WALL) && !hasEntryOnCoords(memory,x,y))
+                    {
+                        std::string key = std::string(Screeps::STRUCTURE_STORAGE)+ "_" + std::to_string(x)+ "_" + std::to_string(y);
+
+                        JSON storage_entry;
+                        storage_entry["x"]      = x;
+                        storage_entry["y"]      = y;
+                        storage_entry["sType"]  = Screeps::STRUCTURE_STORAGE;
+                        storage_entry["cLevel"] = 4;
+                        storage_entry["status"] = "planned";
+
+                        memory["blueprint"][key] = storage_entry;
+                        break;
+                    }
+                }
+                room.setMemory(memory);
+            }
+
+        }
+    }
+
+    /// Plans the towers in checkerboard formation around spawn.
+    void Colony::planTowers() {
+
+        JS::console.log(std::string("Planning the Towers."));
+
+
+        auto spawns = room.find(Screeps::FIND_MY_SPAWNS);
+        if (spawns.empty()) return;
+
+        auto* spawn = dynamic_cast<Screeps::Structure*>(spawns.front().get());
+
+        int spawn_x = spawn->pos().x();
+        int spawn_y = spawn->pos().y();
+
+        // To iterate over checkerboard from bottomright clockwise in increasing radius
+        const std::vector<std::pair<int,int>> directions = {{-2,0},{0,-2},{2,0},{0,2}};
+
+        constexpr int max_towers = 6;
+        int radius = 0;
+        int towers_placed = 0;
+        int cLevel;
+
+        while (towers_placed < max_towers) {
+            radius ++;
+            int x = spawn_x + radius;
+            int y = spawn_y + radius;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < radius; j++) {
+                    x += directions.at(i).first;
+                    y += directions.at(i).second;
+
+                    if (JSON memory = room.memory(); !hasEntryOnCoords(memory, x, y) && towers_placed < max_towers && (room.getTerrain().get(x, y) != Screeps::TERRAIN_MASK_WALL)) {
+
+                        // More towers are placed at higher cLevel
+                        if (towers_placed == 0) {cLevel = 3;}else if (towers_placed == 1) {cLevel = 5;}else if (towers_placed ==2) { cLevel = 7;} else { cLevel = 8;}
+
+                        towers_placed ++;
+
+                        std::string key = std::string(Screeps::STRUCTURE_TOWER)+ "_" + std::to_string(x)+ "_" + std::to_string(y);
+
+                        JS::console.log(std::string("Placing tower on x = " + std::to_string(x) + " y = " + std::to_string(y) + " cLevel = " + std::to_string(cLevel)));
+
+                        JSON entry;
+                        entry["x"]      = x;
+                        entry["y"]      = y;
+                        entry["sType"]  = Screeps::STRUCTURE_TOWER;
+                        entry["cLevel"] = cLevel;
+                        entry["status"] = "planned";
+
+                        memory["blueprint"][key] = entry;
+                        room.setMemory(memory);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Plans the extensions in checkerboard formation around spawn.
+    /// Copy paste from planTowers, should be simplified in common helper function
+    void Colony::planExtensions() {
+
+        JS::console.log(std::string("Planning the Extensions."));
+
+
+        auto spawns = room.find(Screeps::FIND_MY_SPAWNS);
+        if (spawns.empty()) return;
+
+        auto* spawn = dynamic_cast<Screeps::Structure*>(spawns.front().get());
+
+        int spawn_x = spawn->pos().x();
+        int spawn_y = spawn->pos().y();
+
+        // To iterate over checkerboard from bottomright clockwise in increasing radius
+        const std::vector<std::pair<int,int>> directions = {{-2,0},{0,-2},{2,0},{0,2}};
+
+        constexpr int max_extensions = 60;
+        int radius = 0;
+        int extensions_placed = 0;
+        int cLevel = 2;
+
+        while (extensions_placed < max_extensions) {
+            radius ++;
+            int x = spawn_x + radius;
+            int y = spawn_y + radius;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < radius; j++) {
+                    x += directions.at(i).first;
+                    y += directions.at(i).second;
+
+                    if (JSON memory = room.memory(); !hasEntryOnCoords(memory, x, y) && extensions_placed < max_extensions && (room.getTerrain().get(x, y) != Screeps::TERRAIN_MASK_WALL)) {
+
+                        extensions_placed ++;
+                        // More towers are placed at higher cLevel, should find a function for this.
+                        if (extensions_placed <=5) {cLevel = 2;} else if (extensions_placed <=10) {cLevel = 3;} else if (extensions_placed <=20) {cLevel = 4;}
+                        else if (extensions_placed <=30) {cLevel = 5;} else if (extensions_placed <=40) {cLevel = 6;}
+                        else if (extensions_placed <=50) {cLevel = 7;} else if (extensions_placed <=60) {cLevel = 8;}
+
+                        std::string key = std::string(Screeps::STRUCTURE_EXTENSION)+ "_" + std::to_string(x)+ "_" + std::to_string(y);
+
+                        JS::console.log(std::string("Placing extension on x = " + std::to_string(x) + " y = " + std::to_string(y) + " cLevel = " + std::to_string(cLevel)));
+
+                        JSON entry;
+                        entry["x"]      = x;
+                        entry["y"]      = y;
+                        entry["sType"]  = Screeps::STRUCTURE_EXTENSION;
+                        entry["cLevel"] = cLevel;
+                        entry["status"] = "planned";
+
+                        memory["blueprint"][key] = entry;
+                        room.setMemory(memory);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Plan the roadnetwork.
+    /// In this simple version I will just place roads around every structure that is in memory
+    /// Then I will add the path from sources to the storage as well
+    /// Also the path from the storage to the controller I will add to the network.
+    void Colony::planRoads() {
+        JS::console.log(std::string("Planning the Roads."));
+
+        JSON memory = room.memory();
+
+        // This part loops over all memory entries and puts raods there. Im a bit sloppy with setting cLevel here.
+        // It is just the same as the one from entry. Not ideal but it works I hope?
+        for (auto& [name, entry] : memory["blueprint"].items())
+        {
+            int x_entry = entry["x"].get<int>();
+            int y_entry = entry["y"].get<int>();
+            int cLevel = entry["cLevel"].get<int>();
+
+            const std::vector<std::pair<int,int>> directions = {{0,1},{0,-1},{1,1},{1,-1},{1,0},{-1,1},{-1,-1},{-1,0}};
+
+            for (auto& [dx, dy] : directions)
+            {
+                int x = x_entry + dx;
+                int y = y_entry + dy;
+
+                memory = room.memory();
+
+                if ((room.getTerrain().get(x, y) != Screeps::TERRAIN_MASK_WALL) && !hasEntryOnCoords(memory,x,y))
+                {
+                    std::string key = std::string(Screeps::STRUCTURE_ROAD)+ "_" + std::to_string(x)+ "_" + std::to_string(y);
+
+                    JSON road_entry;
+                    road_entry["x"]      = x;
+                    road_entry["y"]      = y;
+                    road_entry["sType"]  = Screeps::STRUCTURE_ROAD;
+                    road_entry["cLevel"] = cLevel;
+                    road_entry["status"] = "planned";
+
+                    memory["blueprint"][key] = road_entry;
+                    room.setMemory(memory);
+                }
+            }
+        }
+
+        // This part makes road between sources and the storage
+        for (auto& [name, entry] : memory["blueprint"].items())
+        {
+            // Look for storage
+            if (entry.value("sType", "") == Screeps::STRUCTURE_STORAGE) {
+                int storage_x = entry["x"].get<int>();
+                int storage_y = entry["y"].get<int>();
+
+                auto storage_pos = Screeps::RoomPosition(room.name(), storage_x, storage_y);
+
+                auto sources = room.find(Screeps::FIND_SOURCES_ACTIVE);
+
+                for (auto &source : sources) {
+
+                    auto path = Screeps::Room::findPath(source->pos(),storage_pos, {"ignoreCreeps" = true});
+
+
+
+
+                    std::string key = std::string(Screeps::STRUCTURE_ROAD)+ "_" + std::to_string(x)+ "_" + std::to_string(y);
+
+                    JSON entry;
+                    entry["x"] = x;
+                    entry["y"] = y;
+                    entry["sType"]  = Screeps::STRUCTURE_ROAD;
+                    entry["cLevel"] = 2;
+                    entry["status"] = "planned";
+
+                    memory["blueprint"][key] = entry;
+                }
+                room.setMemory(memory);
+            }
+
+        }
+    }
+
+    /// Just a helper function to find if tehre already exists an entry on given coordinates
+    bool Colony::hasEntryOnCoords(const JSON& memory, int x, int y) {
+
+        for (auto& [key, entry] : memory["blueprint"].items())
+        {
+            if (entry.value("x", -1) == x && entry.value("y", -1) == y)
+                return true;
+        }
+
+        return false;
     }
 }
