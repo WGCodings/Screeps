@@ -69,4 +69,7 @@ namespace Peabrain {
 
     }
 
+    void Spawn::spawnBuilder() {
+
+    }
 }

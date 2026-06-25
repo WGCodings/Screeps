@@ -41,7 +41,7 @@ namespace Peabrain {
     /// If there is not structure, check if there is an construction site. If not, it was destroyed, so set status to 'planned'.
     void Architect::reviewStructures() {
 
-        if (Screeps::Game.time() % 25 != 0)
+        if (Screeps::Game.time() % 90 != 0)
             return;
 
         JS::console.log(std::string("Architect is reviewing the room structure plan."));
@@ -82,10 +82,40 @@ namespace Peabrain {
         JS::console.log(std::string("Architect is done reviewing the room structure plan."));
     }
 
+    /// This function iterates over all the structures in memory.
+    /// Checks if the structure has status planned and can be built based on controller level
+    /// Make the construction site on the roomPosition and set status to 'construction'.
     void Architect::buildStructures() {
+        if (Screeps::Game.time() % 200 != 0)
+            return;
 
+        JS::console.log(std::string("Architect is placing construction tasks."));
+
+        JSON memory = room.memory();
+
+        auto controllerLevel = room.controller().value().level();
+
+        for (auto& [key, entry] : memory["blueprint"].items()) {
+            // If entry has status = planned and cLevel of this entry <= actual controller level -> it can and should be constructed.
+            if (entry["status"] == "planned" && entry["cLevel"] <= controllerLevel) {
+                int x = entry["x"].get<int>();
+                int y = entry["y"].get<int>();
+
+                auto constructionPosition = Screeps::RoomPosition(room.name(),x,y);
+
+                constructionPosition.createConstructionSite(entry["sType"]);
+
+                entry["status"] = "construction";
+                memory["blueprint"][key] = entry;
+                room.setMemory(memory);
+                JS::console.log(std::string("Architect is placing a construction task for ") + std::string(key));
+
+            }
+        }
+        JS::console.log(std::string("Architect is done placing construction tasks."));
     }
 
+    /// Planner for placing the spawns
     void Architect::planSpawns() {
         JSON memory = room.memory();
 

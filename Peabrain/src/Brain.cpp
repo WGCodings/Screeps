@@ -43,6 +43,7 @@ namespace Peabrain {
                 Architect architect(room);
                 architect.plan();
                 architect.reviewStructures();
+                architect.buildStructures();
             }
         }
     }
