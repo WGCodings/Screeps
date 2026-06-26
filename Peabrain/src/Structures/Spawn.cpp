@@ -12,21 +12,25 @@ namespace Peabrain {
         if (Screeps::Game.time() % checkSpawnInterval != 0)
             return;
 
-        if (spawn.room().find(Screeps::FIND_CREEPS).size() < 20)
+        if (spawn.room().find(Screeps::FIND_CREEPS).size() < 7)
             {
             spawnHarvester();
             }
+        else
+        {
+            spawnBuilder();
+        }
     }
 
 
     void Spawn::spawnHarvester()
     {
-        if (spawn.room().energyAvailable() >= 300)
+        if (spawn.room().energyAvailable() >= 200)
         {
 
             JS::console.log(std::string("Try spawn a harvester."));
 
-            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE, Screeps::CARRY, Screeps::MOVE};
+            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE};
 
             const std::string name = "Harvester_" + std::to_string(Screeps::Game.time());
 
@@ -47,12 +51,12 @@ namespace Peabrain {
 
     void Spawn::spawnUpgrader()
     {
-        if (spawn.room().energyAvailable() >= 300)
+        if (spawn.room().energyAvailable() >= 200)
         {
 
             JS::console.log(std::string("Try spawn an upgrader."));
 
-            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE, Screeps::CARRY, Screeps::MOVE};
+            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE};
 
             const std::string name = "Upgrader_" + std::to_string(Screeps::Game.time());
 
@@ -70,6 +74,24 @@ namespace Peabrain {
     }
 
     void Spawn::spawnBuilder() {
+        if (spawn.room().energyAvailable() >= 200)
+        {
 
+            JS::console.log(std::string("Try spawn a builder."));
+
+            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE};
+
+            const std::string name = "Builder_" + std::to_string(Screeps::Game.time());
+
+            JSON initialMemory;
+            initialMemory["role"] = "builder";
+            initialMemory["task"] = "harvesting";
+
+            JSON options;
+            options["memory"] = initialMemory;
+
+            spawn.spawnCreep(body, name, options);
+
+        }
     }
 }

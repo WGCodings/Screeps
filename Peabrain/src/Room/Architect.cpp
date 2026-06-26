@@ -68,9 +68,9 @@ namespace Peabrain {
             // If there is no construction site, this means it got destroyed so set the status to planned
             else {
                 auto constructionSites = room.lookForAt(Screeps::LOOK_CONSTRUCTION_SITES,x,y);
-                if (constructionSites.empty()) {
+                if (constructionSites.empty() && entry["status"].get<std::string>() != "planned") {
                     entry["status"] = "planned";
-                    JS::console.log(std::string(key) + "was destroyed and should be replanned.");
+                    JS::console.log(std::string(key) + " was destroyed and should be replanned.");
                 }
                 else {
                     entry["status"] = "construction";
@@ -284,7 +284,7 @@ namespace Peabrain {
             entry2["sType"]  = Screeps::STRUCTURE_LINK;
             entry2["cLevel"] = 6;
             entry2["status"] = "planned";
-            entry["role"]    = "source";
+            entry2["role"]    = "source";
 
             memory["blueprint"][key] = entry2;
         }

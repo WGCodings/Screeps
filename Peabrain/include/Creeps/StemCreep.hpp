@@ -26,9 +26,9 @@ namespace Peabrain {
 
         virtual void harvest();
 
-        virtual void gather();
+        virtual bool gather();
 
-        virtual void withdraw();
+        virtual bool withdraw();
 
         void setSourceId();
 

@@ -26,22 +26,30 @@ namespace Peabrain {
     {
         JSON memory = creep.memory();
 
+
+
         if (!memory.contains("sourceId"))
         {
             setSourceId();
+            memory = creep.memory();
+
             if (!memory.contains("sourceId")) return;
         }
 
         Screeps::Source* source = getSourceById(memory["sourceId"]);
 
-        if (!source) { memory.erase("sourceId"); creep.setMemory(memory); return; }
+        if (!source) {
+            memory.erase("sourceId");
+            creep.setMemory(memory);
+            return;
+        }
 
         if (creep.harvest(*source) == Screeps::ERR_NOT_IN_RANGE)
             creep.moveTo(*source);
     }
 
     /// Function to find the closest dropped energy resource
-    void StemCreep::gather()
+    bool StemCreep::gather()
     {
         JSON memory = creep.memory();
 
@@ -49,7 +57,7 @@ namespace Peabrain {
         {
             setGatherId();
             memory = creep.memory();
-            if (!memory.contains("gatherId")) return;
+            if (!memory.contains("gatherId")) return false;
         }
 
         auto gatherId   = memory["gatherId"].get<std::string>();
@@ -63,28 +71,30 @@ namespace Peabrain {
             memory.erase("gatherId");
             memory.erase("gatherType");
             creep.setMemory(memory);
-            return;
+            return false;
         }
 
         auto* resource = dynamic_cast<Screeps::Resource*>(roomObj.get());
 
         if (creep.pickup(*resource) == Screeps::ERR_NOT_IN_RANGE)
             creep.moveTo(*roomObj);
+
+        return true;
     }
 
     /// Look for storage or containers to withdraw energy from
-    void StemCreep::withdraw() {
+    bool StemCreep::withdraw() {
+
+
+
+        setWithdrawId();
+
         JSON memory = creep.memory();
 
-        if (!memory.contains("withdrawId"))
-        {
-            setGatherId();
-            memory = creep.memory();
-            if (!memory.contains("withdrawId")) return;
-        }
+        if (!memory.contains("withdrawId")) return false;
 
-        auto gatherId   = memory["withdrawId"].get<std::string>();
-        auto gatherType = memory.value("withdrawType", "storage");
+        auto withdrawId   = memory["withdrawId"].get<std::string>();
+        auto withdrawType = memory.value("withdrawType", "storage");
 
         auto roomObj = Screeps::Game.getObjectById(memory["withdrawId"]);
 
@@ -93,11 +103,13 @@ namespace Peabrain {
             memory.erase("withdrawId");
             memory.erase("withdrawType");
             creep.setMemory(memory);
-            return;
+            return false;
         }
 
         if (creep.withdraw(*roomObj, Screeps::RESOURCE_ENERGY) == Screeps::ERR_NOT_IN_RANGE)
             creep.moveTo(*roomObj);
+
+        return true;
     }
 
 
@@ -141,8 +153,10 @@ namespace Peabrain {
         }
 
         // 1. Containers
-        auto containers = creep.room().find(Screeps::FIND_STRUCTURES, [](const JS::Value& v) {
-            return v["structureType"].as<std::string>() == Screeps::STRUCTURE_CONTAINER;});
+        auto containers = creep.room().find(Screeps::FIND_STRUCTURES,[this](const JS::Value& v) {
+            return v["structureType"].as<std::string>() == Screeps::STRUCTURE_CONTAINER &&
+               v["store"]["energy"].as<int>() >= creep.store().getFreeCapacity();});
+
         if (!containers.empty())
         {
             auto closest = creep.pos().findClosestByPath(containers);
@@ -156,6 +170,11 @@ namespace Peabrain {
                     creep.setMemory(memory);
                 }
             }
+        }
+        else {
+            memory.erase("withdrawId");
+            memory.erase("withdrawType");
+            creep.setMemory(memory);
         }
     }
 

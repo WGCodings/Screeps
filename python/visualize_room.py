@@ -28,7 +28,7 @@ from tkinter import messagebox
 # ── visual config ──────────────────────────────────────────────────────────────
 
 ROOM_SIZE   = 50        # Screeps rooms are always 50x50
-CELL_SIZE   = 28        # pixels per tile
+CELL_SIZE   = 24        # pixels per tile
 FONT_SIZE   = 14         # font size for cLevel labels
 
 # Colours per structure type

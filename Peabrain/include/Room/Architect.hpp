@@ -1,5 +1,5 @@
-#ifndef PEABRAIN_COLONY_HPP
-#define PEABRAIN_COLONY_HPP
+#ifndef PEABRAIN_ARCHITECT_HPP
+#define PEABRAIN_ARCHITECT_HPP
 #include "Screeps/Room.hpp"
 
 namespace Peabrain {

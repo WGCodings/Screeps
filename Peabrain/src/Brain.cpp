@@ -8,6 +8,7 @@
 #include "Screeps/Room.hpp"
 
 #include "MemoryFlayer.hpp"
+#include "Creeps/Builder.hpp"
 #include "Creeps/Harvester.hpp"
 #include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
@@ -54,15 +55,15 @@ namespace Peabrain {
         {
             JSON memory = creep.memory();
 
+            auto role = memory["role"].get<std::string>();
+
             // If memory does not contain role, skip. Better to kill or fix role.
-            if (!memory.contains("role"))
+            if (role.empty())
             {
                 memory["role"] = "harvester";
                 creep.setMemory(memory);
                 continue;
             }
-
-            auto role = memory["role"].get<std::string>();
 
             // Start looping over all the roles
 
@@ -75,6 +76,11 @@ namespace Peabrain {
             {
                 Upgrader upgrader(creep);
                 upgrader.run();
+            }
+            if (role == "builder")
+            {
+                Builder builder(creep);
+                builder.run();
             }
         }
     }

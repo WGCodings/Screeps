@@ -122,3 +122,58 @@ Requires:
 ## 5. Features
 
 ### Automatic room planning 
+
+Room planning is handled by the `Colony` class (`Peabrain/src/Room/Colony.cpp`).
+
+Planning stores all intended structures in `Memory.rooms[roomName].blueprint` as a flat object of named entries, keyed by `"structType_x_y"`:
+```json
+{
+  "blueprint": {
+    "container_12_8":  { "x": 12, "y": 8,  "sType": "container", "cLevel": 1, "status": "planned"},
+    "link_13_8":       { "x": 13, "y": 8,  "sType": "link",      "cLevel": 5, "status": "planned"},
+    "road_14_9":       { "x": 14, "y": 9,  "sType": "road",      "cLevel": 2, "status": "planned"}
+  }
+}
+```
+
+Each entry has:
+- `x`, `y` — tile coordinates in the room (0–49)
+- `sType` — structure type constant (e.g. `"container"`, `"link"`, `"road"`)
+- `cLevel` — minimum room controller level before this structure should be built
+- `status` — `"planned"` initially
+- `role` — optional hint for logic
+  The following planning functions are implemented:
+
+| Function           | What it places                                                                         |
+|--------------------|----------------------------------------------------------------------------------------|
+| `planContainers()` | One container adjacent to each energy source, on the tile closest to the controller    |
+| `planLinks()`      | One hub link adjacent to the spawn + one spoke link adjacent to each planned container |
+| `planRoads()`      | Roads from each source → storage, and controller → storage, using `Room::findPath`     |
+| `planStorage()`    | One storage near the room center                                                       |
+| `planSpawns()`     | Spawn placement for future expansion rooms                                             |
+| `planTowers()`     | Tower placement scaled to RCL                                                          |
+| `planExtensions()` | Extension grid placement scaled to RCL                                                 |
+
+
+### Blueprint visualizer
+
+A Python utility (`tools/visualize_room.py`) renders the blueprint as an interactive 50×50 grid. It uses only Python's built-in `tkinter` — no pip installs required.
+
+**Step 1 — export memory from the in-game console:**
+```javascript
+JSON.stringify(Memory.rooms)
+```
+Copy the output and save it as `memory.json`.
+
+**Step 2 — run the visualizer:**
+```bash
+python visualize_room.py memory.json E28S42
+```
+Replace `E28S42` with your room name. If the room name is omitted, the first room in the file is used.
+
+The visualizer shows:
+- Each structure type in its own colour, with a short label (`C` = container, `L` = link, `St` = storage, `T` = tower, `E` = extension, `R` = rampart, `·` = road)
+- A small **cLevel tint** in the bottom-right corner of each tile — darker = unlocks at a lower RCL, brighter = higher RCL requirement
+- **Dashed borders** on tiles with `"status": "planned"` (all tiles initially)
+- **Hover** over any tile to see full details (type, coordinates, RCL requirement, role, status) in the status bar at the bottom
+- A legend panel on the right showing colour→type and RCL tint mappings

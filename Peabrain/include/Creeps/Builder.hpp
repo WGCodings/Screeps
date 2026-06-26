@@ -1,7 +1,8 @@
 #ifndef PEABRAIN_CREEPS_BUILDER_HPP
 #define PEABRAIN_CREEPS_BUILDER_HPP
 
-#include "Creeps/StemCreep.hpp"
+#include "StemCreep.hpp"
+
 
 namespace Peabrain {
 
@@ -13,8 +14,10 @@ namespace Peabrain {
         void run() override;
 
     private:
-        void harvest();
-        void build();
+        bool build();
+        void setConstructionSiteId();
+
+        static Screeps::ConstructionSite* getConstructionSiteById(const std::string& cSiteId);
     };
 
 }
