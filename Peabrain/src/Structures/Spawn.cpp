@@ -12,8 +12,12 @@ namespace Peabrain {
         if (Screeps::Game.time() % checkSpawnInterval != 0)
             return;
 
-        if (countCreepsWithRole("harvester") < 4) { spawnHarvester(); return;}
-        if (countCreepsWithRole("builder")   < 4) { spawnBuilder();}
+        auto nrOfHarvesters = spawn.room().memory()["colony"]["harvesters"];
+
+        auto maxEnergyAvailable = spawn.room().energyCapacityAvailable();
+
+        if (countCreepsWithRole("harvester") < 4) { spawnHarvester(maxEnergyAvailable); return;}
+        if (countCreepsWithRole("builder")   < 2) { spawnBuilder(maxEnergyAvailable);}
 
 
     }
@@ -28,15 +32,21 @@ namespace Peabrain {
         return 0;
 
     }
-    
-    void Spawn::spawnHarvester()
+
+    void Spawn::spawnHarvester(int maxEnergyAvailable)
     {
-        if (spawn.room().energyAvailable() >= 200)
+        if (spawn.room().energyAvailable() >= maxEnergyAvailable)
         {
 
             JS::console.log(std::string("Try spawn a harvester."));
 
-            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE};
+            std::vector<std::string> body;
+
+            for (int i = 0; i < maxEnergyAvailable / 200; i++) {
+                body.emplace_back("work");
+                body.emplace_back("carry");
+                body.emplace_back("move");
+            }
 
             const std::string name = "Harvester_" + std::to_string(Screeps::Game.time());
 
@@ -79,13 +89,19 @@ namespace Peabrain {
 
     }
 
-    void Spawn::spawnBuilder() {
-        if (spawn.room().energyAvailable() >= 200)
+    void Spawn::spawnBuilder(int maxEnergyAvailable) {
+        if (spawn.room().energyAvailable() >= maxEnergyAvailable)
         {
 
             JS::console.log(std::string("Try spawn a builder."));
 
-            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE};
+            std::vector<std::string> body;
+
+            for (int i = 0; i < maxEnergyAvailable / 200; i++) {
+                body.emplace_back("work");
+                body.emplace_back("carry");
+                body.emplace_back("move");
+            }
 
             const std::string name = "Builder_" + std::to_string(Screeps::Game.time());
 

@@ -17,9 +17,9 @@ namespace Peabrain {
     private:
         static constexpr int checkSpawnInterval = 10;
 
-        void spawnHarvester();
+        void spawnHarvester(int maxEnergyAvailable);
         void spawnUpgrader();
-        void spawnBuilder();
+        void spawnBuilder(int maxEnergyAvailable);
 
         Screeps::StructureSpawn spawn;
     };

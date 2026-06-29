@@ -246,18 +246,6 @@ namespace Peabrain {
             return true;
         };
 
-        // First fill towers that have less than 500 energy
-        auto towers = creep.room().find(Screeps::FIND_MY_STRUCTURES, [](const JS::Value& v) {
-            return v["structureType"].as<std::string>() == Screeps::STRUCTURE_TOWER
-                && v["store"]["energy"].as<int>() < 900;
-        });
-        if (!towers.empty()) {
-            auto closest = creep.pos().findClosestByRange(towers);
-            if (closest) {
-                auto* t = dynamic_cast<Screeps::Structure*>(closest.get());
-                trySet(t->id(), "tower"); return;
-            }
-        }
 
         // Secondly fill extensions
         auto extensions = creep.room().find(Screeps::FIND_MY_STRUCTURES, [](const JS::Value& v) {
@@ -267,13 +255,25 @@ namespace Peabrain {
             }
             return false;
         });
-
-
+        
         if (!extensions.empty()) {
             auto closest = creep.pos().findClosestByRange(extensions);
             if (closest) {
                 auto* s = dynamic_cast<Screeps::Structure*>(closest.get());
                 if (s) { trySet(s->id(), "extension"); return; }
+            }
+        }
+
+        // First fill towers that have less than 900 energy
+        auto towers = creep.room().find(Screeps::FIND_MY_STRUCTURES, [](const JS::Value& v) {
+            return v["structureType"].as<std::string>() == Screeps::STRUCTURE_TOWER
+                && v["store"]["energy"].as<int>() < 900;
+        });
+        if (!towers.empty()) {
+            auto closest = creep.pos().findClosestByRange(towers);
+            if (closest) {
+                auto* t = dynamic_cast<Screeps::Structure*>(closest.get());
+                trySet(t->id(), "tower"); return;
             }
         }
 
