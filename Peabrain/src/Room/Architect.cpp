@@ -72,7 +72,7 @@ namespace Peabrain {
                     entry["status"] = "planned";
                     JS::console.log(std::string(key) + " was destroyed and should be replanned.");
                 }
-                else {
+                else if (!constructionSites.empty()){
                     entry["status"] = "construction";
                 }
             }

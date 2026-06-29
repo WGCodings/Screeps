@@ -13,6 +13,7 @@
 #include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
 #include "Room/Architect.hpp"
+#include "Room/Colony.hpp"
 #include "Screeps/Creep.hpp"
 #include "Screeps/StructureController.hpp"
 #include "Screeps/StructureTower.hpp"
@@ -56,9 +57,13 @@ namespace Peabrain {
         {
             if (room.controller().value().my()) {
                 Architect architect(room);
+                Colony colony(room);
+
                 architect.plan();
                 architect.reviewStructures();
                 architect.buildStructures();
+
+                colony.colonise();
             }
         }
     }

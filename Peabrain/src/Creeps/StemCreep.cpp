@@ -249,7 +249,7 @@ namespace Peabrain {
         // First fill towers that have less than 500 energy
         auto towers = creep.room().find(Screeps::FIND_MY_STRUCTURES, [](const JS::Value& v) {
             return v["structureType"].as<std::string>() == Screeps::STRUCTURE_TOWER
-                && v["store"]["energy"].as<int>() < 500;
+                && v["store"]["energy"].as<int>() < 900;
         });
         if (!towers.empty()) {
             auto closest = creep.pos().findClosestByRange(towers);

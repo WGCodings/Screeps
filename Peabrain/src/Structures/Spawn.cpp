@@ -28,6 +28,7 @@ namespace Peabrain {
         return 0;
 
     }
+    
     void Spawn::spawnHarvester()
     {
         if (spawn.room().energyAvailable() >= 200)

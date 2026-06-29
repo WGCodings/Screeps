@@ -9,12 +9,14 @@
 #include "Screeps/JS.hpp"
 #include "Screeps/Room.hpp"
 #include "Screeps/RoomPosition.hpp"
+#include "Screeps/Store.hpp"
 
 
 namespace Peabrain {
 
     void Tower::run()
     {
+        if (tower.store().getUsedCapacity(Screeps::RESOURCE_ENERGY) == 0) return;
         // Fire first, then repair stuff
         if (!fire())
             repair();
@@ -72,6 +74,8 @@ namespace Peabrain {
 
     /// Try to repair a structure in need of repair
     /// Loop over memory where the status of the strucutre is 'repair'.
+    /// TODO this seems to cost A LOT of CPU, around 2 per tower. Needs a solve. Seems looping over memory is just very expensive.
+    /// Maybe just closest in range where hits < hitsmax
     void Tower::repair()
     {
         // Find a new repair target from blueprint entries marked "repair"
