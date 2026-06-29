@@ -10,6 +10,11 @@
 #include "Screeps/StructureController.hpp"
 #include "Screeps/StructureStorage.hpp"
 
+#include <Screeps/Game.hpp>
+#include <Screeps/StructureSpawn.hpp>
+
+#include "Screeps/StructureExtension.hpp"
+
 namespace Peabrain {
 
     /// Upgrade the controller
@@ -25,8 +30,6 @@ namespace Peabrain {
     void StemCreep::harvest()
     {
         JSON memory = creep.memory();
-
-
 
         if (!memory.contains("sourceId"))
         {
@@ -46,6 +49,38 @@ namespace Peabrain {
 
         if (creep.harvest(*source) == Screeps::ERR_NOT_IN_RANGE)
             creep.moveTo(*source);
+    }
+
+
+
+
+    /// Deliver your energy to the source b*tch
+    /// First deliver to towers (More than 500 energy), then extensions, then spawn and finally to storage
+    /// TODO setDeliveryId is very inefficient, it constantly calls findClosestInRange which is expensive.
+    /// better to use a combination of the memory and lookForAt for example
+    bool StemCreep::deliver()
+    {
+        setDeliverId();
+
+        JSON memory = creep.memory();
+        if (!memory.contains("deliverId")) return false;
+
+        auto roomObj = Screeps::Game.getObjectById(memory["deliverId"]);
+
+        if (!roomObj)
+        {
+            memory.erase("deliverId");
+            memory.erase("deliverType");
+            creep.setMemory(memory);
+            return false;
+        }
+
+        auto structure = dynamic_cast<Screeps::Structure*>(roomObj.release());
+
+        if (creep.transfer(*structure, Screeps::RESOURCE_ENERGY) == Screeps::ERR_NOT_IN_RANGE)
+            creep.moveTo(*structure);
+
+        return true;
     }
 
     /// Function to find the closest dropped energy resource
@@ -111,9 +146,6 @@ namespace Peabrain {
 
         return true;
     }
-
-
-
 
     /// What it does it scans the current room and looks for containers with energy or tombstones with energy
     /// 1. Look for dropped resources
@@ -190,6 +222,8 @@ namespace Peabrain {
             srand (Screeps::Game.time());
             int index = rand()%sources.size();
 
+            //JS::console.log(std::string("chosing source with index .") + std::to_string(index) + std::string(" out of number sources : ") + std::to_string(sources.size()));
+
             auto* source = dynamic_cast<Screeps::Source*>(sources[index].get());
             if (source)
             {
@@ -198,6 +232,71 @@ namespace Peabrain {
             }
 
         }
+
+    void StemCreep::setDeliverId()
+    {
+        JSON memory = creep.memory();
+
+        // Repeated function
+        auto trySet = [&](const std::string& id, const std::string& type) -> bool
+        {
+            memory["deliverId"]   = id;
+            memory["deliverType"] = type;
+            creep.setMemory(memory);
+            return true;
+        };
+
+        // First fill towers that have less than 500 energy
+        auto towers = creep.room().find(Screeps::FIND_MY_STRUCTURES, [](const JS::Value& v) {
+            return v["structureType"].as<std::string>() == Screeps::STRUCTURE_TOWER
+                && v["store"]["energy"].as<int>() < 500;
+        });
+        if (!towers.empty()) {
+            auto closest = creep.pos().findClosestByRange(towers);
+            if (closest) {
+                auto* t = dynamic_cast<Screeps::Structure*>(closest.get());
+                trySet(t->id(), "tower"); return;
+            }
+        }
+
+        // Secondly fill extensions
+        auto extensions = creep.room().find(Screeps::FIND_MY_STRUCTURES, [](const JS::Value& v) {
+            if (v["structureType"].as<std::string>() == Screeps::STRUCTURE_EXTENSION && v["energy"].as<int>() < v["energyCapacity"].as<int>())
+            {
+                return true;
+            }
+            return false;
+        });
+
+
+        if (!extensions.empty()) {
+            auto closest = creep.pos().findClosestByRange(extensions);
+            if (closest) {
+                auto* s = dynamic_cast<Screeps::Structure*>(closest.get());
+                if (s) { trySet(s->id(), "extension"); return; }
+            }
+        }
+
+        // Then fill spawns
+        auto spawns = creep.room().find(Screeps::FIND_MY_SPAWNS);
+        if (!spawns.empty()) {
+            auto closest = creep.pos().findClosestByRange(spawns);
+            if (closest ) {
+                auto* s = dynamic_cast<Screeps::StructureSpawn*>(closest.get());
+                if (s && s->store().getFreeCapacity(Screeps::RESOURCE_ENERGY) > 0) { trySet(s->id(), "spawn"); return; }
+            }
+        }
+
+        // Finally drop off in storage
+        auto storage = creep.room().storage();
+        if (storage.has_value() && storage->store().getFreeCapacity(Screeps::RESOURCE_ENERGY) > 0)
+        { trySet(storage->id(), "storage"); return; }
+
+        // Nothing found so erase ids
+        memory.erase("deliverId");
+        memory.erase("deliverType");
+        creep.setMemory(memory);
+    }
 
     /// This function return the source object given an id
     Screeps::Source* StemCreep::getSourceById(const std::string& sourceId)

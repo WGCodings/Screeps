@@ -15,6 +15,8 @@
 #include "Room/Architect.hpp"
 #include "Screeps/Creep.hpp"
 #include "Screeps/StructureController.hpp"
+#include "Screeps/StructureTower.hpp"
+#include "Structures/Tower.hpp"
 
 
 namespace Peabrain {
@@ -34,6 +36,18 @@ namespace Peabrain {
             Spawn spawner(spawn);
             spawner.run();
             }
+
+
+        for (auto& [name, structure] : Screeps::Game.structures())
+            {
+            auto structureType = structure.structureType();
+
+            if (structureType == "tower") {
+                auto t = static_cast<Screeps::StructureTower>(structure);
+                Tower tower(t);
+                tower.run();
+            }
+        }
     }
 
     void Brain::runRooms() {

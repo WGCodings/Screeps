@@ -1,7 +1,7 @@
 #ifndef PEABRAIN_CREEPS_HARVESTER_HPP
 #define PEABRAIN_CREEPS_HARVESTER_HPP
+#include "StemCreep.hpp"
 
-#include "Creeps/StemCreep.hpp"
 
 namespace Peabrain {
 
@@ -12,8 +12,6 @@ namespace Peabrain {
 
         void run() override;
 
-    private:
-        void deliver();
     };
 
 }

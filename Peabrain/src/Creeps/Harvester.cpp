@@ -2,7 +2,6 @@
 
 
 #include <Screeps/Game.hpp>
-#include <Screeps/Source.hpp>
 #include <Screeps/StructureSpawn.hpp>
 
 #include "Creeps/Upgrader.hpp"
@@ -45,48 +44,17 @@ void Harvester::run()
 	}
 	else if (task == "delivering")
 	{
-		deliver();
+		if (!deliver()){
+			task = "upgrading";
+			creep.say("Upgrade.");
+			upgrade();
+		}
 	}
-	else {
+	else if (task == "upgrading"){
 		upgrade();
 	}
-}
-
-
-
-
-/// Deliver your energy to the source b*tch
-/// If all sources are full, go upgrading the controller
-void Harvester::deliver()
-{
-
-	JSON memory = creep.memory();
-
-	// TODO Currently only delivers to spawn but should also deliver to extensions later.
-	std::map<std::string, Screeps::StructureSpawn> spawns = Screeps::Game.spawns();
-
-	if (spawns.empty())
-	{
-		return;
-	}
-
-	Screeps::StructureSpawn& target = spawns.begin()->second;
-
-
-	// If there is no place to store the energy, go upgrade the controller
-	int freeCapacity = target.store().getFreeCapacity(Screeps::RESOURCE_ENERGY).value();
-
-	if (freeCapacity == 0)
-	{
-		memory["task"] = "upgrading";
-		creep.setMemory(memory);
-		upgrade();
-		return;
-	}
-
-	if (creep.transfer(target, Screeps::RESOURCE_ENERGY) == Screeps::ERR_NOT_IN_RANGE)
-	{
-		creep.moveTo(target);
-	}
+	memory = creep.memory();
+	memory["task"] = task;
+	creep.setMemory(memory);
 }
 }

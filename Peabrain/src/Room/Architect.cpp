@@ -58,7 +58,7 @@ namespace Peabrain {
                 auto* structure = dynamic_cast<Screeps::Structure*>(structures.front().get());
                 if (structure->hits() < 0.5*structure->hitsMax()) {
                     entry["status"] = "repair";
-                    JS::console.log(std::string(key) + "needs repair.");
+                    JS::console.log(std::string(key) + " needs repair.");
                 }
                 else {
                     entry["status"] = "built";

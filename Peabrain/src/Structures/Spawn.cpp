@@ -12,17 +12,22 @@ namespace Peabrain {
         if (Screeps::Game.time() % checkSpawnInterval != 0)
             return;
 
-        if (spawn.room().find(Screeps::FIND_CREEPS).size() < 7)
-            {
-            spawnHarvester();
-            }
-        else
-        {
-            spawnBuilder();
-        }
+        if (countCreepsWithRole("harvester") < 4) { spawnHarvester(); return;}
+        if (countCreepsWithRole("builder")   < 4) { spawnBuilder();}
+
+
     }
 
+    int Spawn::countCreepsWithRole(const std::string& role) const
+    {
+        auto result = spawn.room().find(Screeps::FIND_MY_CREEPS, [&role](const JS::Value& v) {
+        Screeps::Creep c(v);return c.memory().value("role", "") == role;}).size();
+        if (result) {
+            return static_cast<int>(result);
+        }
+        return 0;
 
+    }
     void Spawn::spawnHarvester()
     {
         if (spawn.room().energyAvailable() >= 200)
