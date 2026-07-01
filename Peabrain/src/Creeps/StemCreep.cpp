@@ -82,13 +82,15 @@ namespace Peabrain {
 
         auto structure = dynamic_cast<Screeps::Structure*>(roomObj.release());
 
-        if (creep.transfer(*structure, Screeps::RESOURCE_ENERGY) != Screeps::OK) {
-            creep.moveTo(*structure);
-        }
-        else {
+        auto result = creep.transfer(*structure, Screeps::RESOURCE_ENERGY);
+
+        if (result == Screeps::OK || result == Screeps::ERR_FULL) {
             memory.erase("deliverId");
             memory.erase("deliverType");
             creep.setMemory(memory);
+        }
+        else{
+            creep.moveTo(*structure);
         }
         return true;
     }
@@ -232,7 +234,7 @@ namespace Peabrain {
     /// This function finds a source and assign the id to the memory of the harvester
     void StemCreep::setSourceId()
         {
-            auto sources = creep.room().find(Screeps::FIND_SOURCES_ACTIVE);
+            auto sources = creep.room().find(Screeps::FIND_SOURCES);
 
             if (sources.empty()) return;
 

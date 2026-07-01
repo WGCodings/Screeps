@@ -16,9 +16,10 @@ namespace Peabrain {
 
         auto maxEnergyAvailable = spawn.room().energyCapacityAvailable();
 
+        if (countCreepsWithRole("miner")   < 2) { spawnMiner(maxEnergyAvailable); return;}
         if (countCreepsWithRole("runner")   < 2) { spawnRunner(maxEnergyAvailable); return;}
-        if (countCreepsWithRole("harvester") < 2) { spawnHarvester(maxEnergyAvailable); return;}
-        if (countCreepsWithRole("builder")   < 2) { spawnBuilder(maxEnergyAvailable);}
+        if (countCreepsWithRole("harvester") < 0) { spawnHarvester(maxEnergyAvailable); return;}
+        if (countCreepsWithRole("builder")   < 0) { spawnBuilder(maxEnergyAvailable);}
 
 
     }

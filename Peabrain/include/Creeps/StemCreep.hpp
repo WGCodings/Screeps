@@ -32,9 +32,9 @@ namespace Peabrain {
 
         virtual bool withdraw();
 
-        void setSourceId();
+        virtual void setSourceId();
 
-        void setDeliverId();
+        virtual void setDeliverId();
 
         void setGatherId();
 

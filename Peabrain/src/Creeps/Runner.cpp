@@ -115,7 +115,6 @@ namespace Peabrain {
 
                 if (structure && std::find(claimedIds.begin(), claimedIds.end(), structure->id()) == claimedIds.end()) {
                     availableContainers.push_back(std::move(container));
-                    JS::console.log(std::string("found available container."));
                 }
 
             }

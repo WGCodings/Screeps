@@ -10,6 +10,7 @@
 #include "MemoryFlayer.hpp"
 #include "Creeps/Builder.hpp"
 #include "Creeps/Harvester.hpp"
+#include "Creeps/Miner.hpp"
 #include "Creeps/Runner.hpp"
 #include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
@@ -30,7 +31,7 @@ namespace Peabrain {
         runRooms();
         MemoryFlayer::run();
     }
-    
+
     void Brain::runCreeps()
     {
         for (auto& [name, creep] : Screeps::Game.creeps())
@@ -68,6 +69,11 @@ namespace Peabrain {
             {
                 Runner runner(creep);
                 runner.run();
+            }
+            if (role == "miner")
+            {
+                Miner miner(creep);
+                miner.run();
             }
         }
     }
