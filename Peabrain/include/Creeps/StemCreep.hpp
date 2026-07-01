@@ -38,7 +38,7 @@ namespace Peabrain {
 
         void setGatherId();
 
-        void setWithdrawId();
+        virtual void setWithdrawId();
 
         static Screeps::Source* getSourceById(const std::string& sourceId);
     };

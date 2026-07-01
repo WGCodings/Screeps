@@ -78,7 +78,7 @@ namespace Peabrain {
             memory["colony"] = {
                 {"stage",       3},
                 {"harvesters",  0},
-                {"upgraders",   1},
+                {"upgraders",   0},
                 {"builders",    2},
                 {"haulers",     2},
                 {"miners",      2},

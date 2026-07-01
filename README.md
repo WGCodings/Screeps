@@ -177,3 +177,9 @@ The visualizer shows:
 - **Dashed borders** on tiles with `"status": "planned"` (all tiles initially)
 - **Hover** over any tile to see full details (type, coordinates, RCL requirement, role, status) in the status bar at the bottom
 - A legend panel on the right showing colour→type and RCL tint mappings
+
+### Roadmap
+
+Just some ideas I'm having that I would like to implement at some point:
+* Dashboard where I can see statistics about energy minder, energy used on all types, etc. Would to helpful to see if a patch makes the colony more efficient.
+* Idle counter to each creep. If it passes x ticks, then reset memory to default value.

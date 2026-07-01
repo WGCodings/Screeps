@@ -56,14 +56,19 @@ namespace Peabrain {
 
     /// Deliver your energy to the source b*tch
     /// First deliver to towers (More than 500 energy), then extensions, then spawn and finally to storage
-    /// TODO setDeliveryId is very inefficient, it constantly calls findClosestInRange which is expensive.
+    /// TODO setDeliveryId is very inefficient, it constantly calls findClosestInRange which is expensive. store in memory just like withdraw
     /// better to use a combination of the memory and lookForAt for example
     bool StemCreep::deliver()
     {
-        setDeliverId();
-
         JSON memory = creep.memory();
-        if (!memory.contains("deliverId")) return false;
+
+        if (!memory.contains("deliverId"))
+        {
+            setDeliverId();
+            memory = creep.memory();
+
+            if (!memory.contains("deliverId")) return false;
+        }
 
         auto roomObj = Screeps::Game.getObjectById(memory["deliverId"]);
 
@@ -77,9 +82,14 @@ namespace Peabrain {
 
         auto structure = dynamic_cast<Screeps::Structure*>(roomObj.release());
 
-        if (creep.transfer(*structure, Screeps::RESOURCE_ENERGY) == Screeps::ERR_NOT_IN_RANGE)
+        if (creep.transfer(*structure, Screeps::RESOURCE_ENERGY) != Screeps::OK) {
             creep.moveTo(*structure);
-
+        }
+        else {
+            memory.erase("deliverId");
+            memory.erase("deliverType");
+            creep.setMemory(memory);
+        }
         return true;
     }
 
@@ -121,15 +131,17 @@ namespace Peabrain {
     bool StemCreep::withdraw() {
 
 
-
-        setWithdrawId();
-
         JSON memory = creep.memory();
 
-        if (!memory.contains("withdrawId")) return false;
+        if (!memory.contains("withdrawId"))
+        {
+            setWithdrawId();
+            memory = creep.memory();
+
+            if (!memory.contains("withdrawId")) return false;
+        }
 
         auto withdrawId   = memory["withdrawId"].get<std::string>();
-        auto withdrawType = memory.value("withdrawType", "storage");
 
         auto roomObj = Screeps::Game.getObjectById(memory["withdrawId"]);
 
@@ -141,8 +153,14 @@ namespace Peabrain {
             return false;
         }
 
-        if (creep.withdraw(*roomObj, Screeps::RESOURCE_ENERGY) == Screeps::ERR_NOT_IN_RANGE)
+        if (creep.withdraw(*roomObj, Screeps::RESOURCE_ENERGY) != Screeps::OK) {
             creep.moveTo(*roomObj);
+        }
+        else {
+            memory.erase("withdrawId");
+            memory.erase("withdrawType");
+            creep.setMemory(memory);
+        }
 
         return true;
     }
@@ -169,6 +187,7 @@ namespace Peabrain {
             }
         }
     }
+
     /// Set the id of the container or storage to memory from where to withdraw
     /// First look for storage then containers
     void StemCreep::setWithdrawId()
@@ -247,7 +266,7 @@ namespace Peabrain {
         };
 
 
-        // Secondly fill extensions
+        // First fill extensions
         auto extensions = creep.room().find(Screeps::FIND_MY_STRUCTURES, [](const JS::Value& v) {
             if (v["structureType"].as<std::string>() == Screeps::STRUCTURE_EXTENSION && v["energy"].as<int>() < v["energyCapacity"].as<int>())
             {
@@ -255,12 +274,22 @@ namespace Peabrain {
             }
             return false;
         });
-        
+
         if (!extensions.empty()) {
             auto closest = creep.pos().findClosestByRange(extensions);
             if (closest) {
                 auto* s = dynamic_cast<Screeps::Structure*>(closest.get());
                 if (s) { trySet(s->id(), "extension"); return; }
+            }
+        }
+
+        // Then fill spawns
+        auto spawns = creep.room().find(Screeps::FIND_MY_SPAWNS);
+        if (!spawns.empty()) {
+            auto closest = creep.pos().findClosestByRange(spawns);
+            if (closest ) {
+                auto* s = dynamic_cast<Screeps::StructureSpawn*>(closest.get());
+                if (s && s->store().getFreeCapacity(Screeps::RESOURCE_ENERGY) > 0) { trySet(s->id(), "spawn"); return; }
             }
         }
 
@@ -274,16 +303,6 @@ namespace Peabrain {
             if (closest) {
                 auto* t = dynamic_cast<Screeps::Structure*>(closest.get());
                 trySet(t->id(), "tower"); return;
-            }
-        }
-
-        // Then fill spawns
-        auto spawns = creep.room().find(Screeps::FIND_MY_SPAWNS);
-        if (!spawns.empty()) {
-            auto closest = creep.pos().findClosestByRange(spawns);
-            if (closest ) {
-                auto* s = dynamic_cast<Screeps::StructureSpawn*>(closest.get());
-                if (s && s->store().getFreeCapacity(Screeps::RESOURCE_ENERGY) > 0) { trySet(s->id(), "spawn"); return; }
             }
         }
 

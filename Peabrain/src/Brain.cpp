@@ -10,6 +10,7 @@
 #include "MemoryFlayer.hpp"
 #include "Creeps/Builder.hpp"
 #include "Creeps/Harvester.hpp"
+#include "Creeps/Runner.hpp"
 #include "Creeps/Upgrader.hpp"
 #include "nlohmann/json.hpp"
 #include "Room/Architect.hpp"
@@ -28,6 +29,47 @@ namespace Peabrain {
         runCreeps();
         runRooms();
         MemoryFlayer::run();
+    }
+    
+    void Brain::runCreeps()
+    {
+        for (auto& [name, creep] : Screeps::Game.creeps())
+        {
+            JSON memory = creep.memory();
+
+            auto role = memory["role"].get<std::string>();
+
+            // If memory does not contain role, skip. Better to kill or fix role.
+            if (role.empty())
+            {
+                memory["role"] = "harvester";
+                creep.setMemory(memory);
+                continue;
+            }
+
+            // Start looping over all the roles
+
+            if (role == "harvester")
+            {
+                Harvester harvester(creep);
+                harvester.run();
+            }
+            if (role == "upgrader")
+            {
+                Upgrader upgrader(creep);
+                upgrader.run();
+            }
+            if (role == "builder")
+            {
+                Builder builder(creep);
+                builder.run();
+            }
+            if (role == "runner")
+            {
+                Runner runner(creep);
+                runner.run();
+            }
+        }
     }
 
     void Brain::runStructures() {
@@ -68,40 +110,6 @@ namespace Peabrain {
         }
     }
 
-    void Brain::runCreeps()
-    {
-        for (auto& [name, creep] : Screeps::Game.creeps())
-        {
-            JSON memory = creep.memory();
 
-            auto role = memory["role"].get<std::string>();
-
-            // If memory does not contain role, skip. Better to kill or fix role.
-            if (role.empty())
-            {
-                memory["role"] = "harvester";
-                creep.setMemory(memory);
-                continue;
-            }
-
-            // Start looping over all the roles
-
-            if (role == "harvester")
-             {
-                Harvester harvester(creep);
-                harvester.run();
-             }
-            if (role == "upgrader")
-            {
-                Upgrader upgrader(creep);
-                upgrader.run();
-            }
-            if (role == "builder")
-            {
-                Builder builder(creep);
-                builder.run();
-            }
-        }
-    }
 
 }

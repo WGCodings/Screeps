@@ -16,7 +16,8 @@ namespace Peabrain {
 
         auto maxEnergyAvailable = spawn.room().energyCapacityAvailable();
 
-        if (countCreepsWithRole("harvester") < 4) { spawnHarvester(maxEnergyAvailable); return;}
+        if (countCreepsWithRole("runner")   < 2) { spawnRunner(maxEnergyAvailable); return;}
+        if (countCreepsWithRole("harvester") < 2) { spawnHarvester(maxEnergyAvailable); return;}
         if (countCreepsWithRole("builder")   < 2) { spawnBuilder(maxEnergyAvailable);}
 
 
@@ -42,11 +43,22 @@ namespace Peabrain {
 
             std::vector<std::string> body;
 
-            for (int i = 0; i < maxEnergyAvailable / 200; i++) {
+            auto work_parts = std::min(maxEnergyAvailable / 200, 6);
+            auto extra_parts = std::max((maxEnergyAvailable-1200) / 150,0);
+
+            for (int i = 0; i < work_parts; i++) {
                 body.emplace_back("work");
                 body.emplace_back("carry");
                 body.emplace_back("move");
             }
+
+            for (int i = 0; i < extra_parts; i++) {
+                body.emplace_back("carry");
+                body.emplace_back("carry");
+                body.emplace_back("move");
+            }
+
+
 
             const std::string name = "Harvester_" + std::to_string(Screeps::Game.time());
 
@@ -65,14 +77,29 @@ namespace Peabrain {
 
     }
 
-    void Spawn::spawnUpgrader()
+    void Spawn::spawnUpgrader(int maxEnergyAvailable)
     {
-        if (spawn.room().energyAvailable() >= 200)
+        if (spawn.room().energyAvailable() >= maxEnergyAvailable)
         {
 
             JS::console.log(std::string("Try spawn an upgrader."));
 
-            const std::vector<std::string> body = {Screeps::WORK, Screeps::CARRY, Screeps::MOVE};
+            std::vector<std::string> body;
+
+            auto work_parts = std::min(maxEnergyAvailable / 200, 6);
+            auto extra_parts = std::max((maxEnergyAvailable-1200) / 150,0);
+
+            for (int i = 0; i < work_parts; i++) {
+                body.emplace_back("work");
+                body.emplace_back("carry");
+                body.emplace_back("move");
+            }
+
+            for (int i = 0; i < extra_parts; i++) {
+                body.emplace_back("carry");
+                body.emplace_back("carry");
+                body.emplace_back("move");
+            }
 
             const std::string name = "Upgrader_" + std::to_string(Screeps::Game.time());
 
@@ -97,8 +124,17 @@ namespace Peabrain {
 
             std::vector<std::string> body;
 
-            for (int i = 0; i < maxEnergyAvailable / 200; i++) {
+            auto work_parts = std::min(maxEnergyAvailable / 200, 6);
+            auto extra_parts = std::max((maxEnergyAvailable-1200) / 150,0);
+
+            for (int i = 0; i < work_parts; i++) {
                 body.emplace_back("work");
+                body.emplace_back("carry");
+                body.emplace_back("move");
+            }
+
+            for (int i = 0; i < extra_parts; i++) {
+                body.emplace_back("carry");
                 body.emplace_back("carry");
                 body.emplace_back("move");
             }
@@ -107,6 +143,76 @@ namespace Peabrain {
 
             JSON initialMemory;
             initialMemory["role"] = "builder";
+            initialMemory["task"] = "harvesting";
+
+            JSON options;
+            options["memory"] = initialMemory;
+
+            spawn.spawnCreep(body, name, options);
+
+        }
+    }
+
+    void Spawn::spawnRunner(int maxEnergyAvailable) {
+        if (spawn.room().energyAvailable() >= maxEnergyAvailable)
+        {
+
+            JS::console.log(std::string("Try spawn a runner."));
+
+            std::vector<std::string> body;
+
+            auto extra_parts = maxEnergyAvailable / 150;
+
+            for (int i = 0; i < extra_parts; i++) {
+                body.emplace_back("carry");
+                body.emplace_back("carry");
+                body.emplace_back("move");
+            }
+
+            const std::string name = "Runner_" + std::to_string(Screeps::Game.time());
+
+            JSON initialMemory;
+            initialMemory["role"] = "runner";
+            initialMemory["task"] = "gathering";
+
+            JSON options;
+            options["memory"] = initialMemory;
+
+            spawn.spawnCreep(body, name, options);
+
+        }
+    }
+
+    void Spawn::spawnMiner(int maxEnergyAvailable) {
+
+        // A miner in stage 4 should be able to deposit to the links.
+        const int roomStage = spawn.room().memory()["colony"]["stage"].get<int>();
+
+        // 1400 is the maximum a miner needs for energy : 10 work, 4 carry, 4 move
+        if (spawn.room().energyAvailable() >= std::min(maxEnergyAvailable,1400))
+        {
+
+            JS::console.log(std::string("Try spawn a miner."));
+
+            std::vector<std::string> body;
+            auto carryParts = (roomStage==4) ? 4 : 0;
+            auto workParts = std::min((maxEnergyAvailable-200-50*carryParts) / 100, 10);
+            auto moveParts = (carryParts+workParts)/3;
+
+            for (int i = 0; i < moveParts; i++) {
+                body.emplace_back("move");
+            }
+            for (int i = 0; i < carryParts; i++) {
+                body.emplace_back("carry");
+            }
+            for (int i = 0; i < workParts; i++) {
+                body.emplace_back("work");
+            }
+
+            const std::string name = "Miner_" + std::to_string(Screeps::Game.time());
+
+            JSON initialMemory;
+            initialMemory["role"] = "miner";
             initialMemory["task"] = "harvesting";
 
             JSON options;
